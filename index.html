@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>地球 ONLINE (小狗服)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    .stack-card {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #ffffff;
+      box-shadow: 0 28px 80px rgba(15, 23, 42, 0.22);
+      transition:
+        opacity 560ms ease,
+        transform 720ms cubic-bezier(0.22, 1, 0.36, 1),
+        filter 720ms ease;
+      will-change: transform, opacity, filter;
+    }
+
+    .stack-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+
+    .stack-card.is-front {
+      z-index: 30;
+      opacity: 1;
+      filter: saturate(1) contrast(1);
+      transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+    }
+
+    .stack-card.is-middle {
+      z-index: 20;
+      opacity: 0.9;
+      filter: saturate(0.96) contrast(0.98);
+      transform: translate3d(-22px, 18px, 0) rotate(-3deg) scale(0.96);
+    }
+
+    .stack-card.is-back {
+      z-index: 10;
+      opacity: 0.78;
+      filter: saturate(0.9) contrast(0.96);
+      transform: translate3d(28px, 30px, 0) rotate(6deg) scale(0.92);
+    }
+
+    .stack-card.is-leaving {
+      z-index: 40;
+      opacity: 0;
+      filter: saturate(0.85) blur(1px);
+      transform: translate3d(72px, -24px, 0) rotate(8deg) scale(0.94);
+    }
+  </style>
+</head>
+<body class="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_18%_18%,rgba(219,234,254,0.95),transparent_30%),radial-gradient(circle_at_82%_24%,rgba(221,214,254,0.75),transparent_28%),linear-gradient(135deg,#f8fafc_0%,#eef2ff_48%,#f5f3ff_100%)] text-black">
+  <header class="fixed left-0 top-0 z-50 w-full border-b border-white/40 bg-white/45 backdrop-blur-2xl">
+    <nav class="mx-auto flex h-16 w-full max-w-7xl items-center justify-end px-5 lg:px-8">
+      <div class="flex items-center gap-5 text-sm font-semibold text-neutral-500 sm:gap-7">
+        <div class="group relative">
+          <button
+            type="button"
+            class="transition hover:text-neutral-950"
+            aria-haspopup="true"
+          >
+            服务区切换 ▾
+          </button>
+
+          <div class="invisible absolute right-0 top-full z-50 mt-3 w-36 translate-y-2 bg-white py-2 opacity-0 shadow-xl ring-1 ring-black/5 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+            <a href="#" class="block px-4 py-2.5 text-sm text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-950">喵喵服</a>
+            <a href="#" class="block px-4 py-2.5 text-sm text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-950">水豚服</a>
+            <a href="#" class="block px-4 py-2.5 text-sm text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-950">...</a>
+          </div>
+        </div>
+
+        <a href="#" class="transition hover:text-neutral-950">开发者专区</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="mx-auto grid min-h-screen w-full max-w-7xl grid-cols-1 items-center gap-12 px-5 pb-10 pt-28 md:grid-cols-[minmax(0,1fr)_minmax(420px,0.92fr)] md:gap-14 lg:px-8">
+    <section class="flex min-h-[420px] flex-col justify-center">
+      <div class="max-w-3xl">
+        <h1 class="text-5xl font-normal leading-[1.02] tracking-normal text-neutral-950 sm:text-6xl lg:text-7xl">
+          🌍 地球 ONLINE
+        </h1>
+
+        <p class="mt-6 max-w-2xl text-lg leading-9 text-gray-500 sm:text-xl">
+          当前已接入<span class="rounded-full bg-indigo-100 px-2.5 py-1 text-neutral-800">小狗服</span>。请小狗玩家上传本阶段的『实机演示截图』，留下你对地球副本的真实评价吧！
+        </p>
+
+        <div class="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <label
+            for="dogImageInput"
+            id="uploadLabel"
+            class="group inline-flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-full bg-neutral-950 px-8 py-4 text-base font-black text-white shadow-[0_18px_45px_rgba(15,23,42,0.22),0_0_32px_rgba(99,102,241,0.12)] transition duration-300 hover:-translate-y-0.5 hover:bg-neutral-800 hover:shadow-[0_22px_60px_rgba(99,102,241,0.34),0_0_46px_rgba(56,189,248,0.18)] focus-within:outline focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-indigo-300"
+          >
+            <span aria-hidden="true">📸</span>
+            <span>上传小狗照片</span>
+          </label>
+          <input id="dogImageInput" class="sr-only" type="file" accept="image/*" />
+
+          <button
+            id="saveButton"
+            type="button"
+            class="hidden min-h-14 rounded-full border border-neutral-950/10 bg-white/75 px-7 py-4 text-base font-black text-neutral-950 shadow-[0_14px_36px_rgba(15,23,42,0.12)] backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_20px_52px_rgba(15,23,42,0.18)] disabled:cursor-not-allowed disabled:border-neutral-300 disabled:text-neutral-400 disabled:shadow-none"
+          >
+            保存图片
+          </button>
+
+          <button
+            id="resetButton"
+            type="button"
+            class="hidden min-h-14 rounded-full border border-white/70 bg-white/45 px-7 py-4 text-base font-black text-neutral-600 shadow-[0_10px_28px_rgba(15,23,42,0.08)] backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:bg-white/80 hover:text-neutral-950 disabled:cursor-not-allowed disabled:text-neutral-400 disabled:shadow-none"
+          >
+            再来一张
+          </button>
+        </div>
+
+        <p id="statusText" class="mt-5 min-h-6 text-sm font-medium text-neutral-500">
+          右侧正在展示生成效果示例。
+        </p>
+      </div>
+    </section>
+
+    <section class="flex min-h-[620px] w-full items-center justify-center md:justify-end">
+      <div
+        id="demoState"
+        class="relative aspect-[4/5] w-full max-w-[430px]"
+        aria-label="生成效果堆叠轮播演示"
+      >
+        <div class="stack-card is-front" data-stack-card>
+          <img src="./demo1.jpg" alt="小狗评价示例一" />
+        </div>
+        <div class="stack-card is-middle" data-stack-card>
+          <img src="./demo2.jpg" alt="小狗评价示例二" />
+        </div>
+        <div class="stack-card is-back" data-stack-card>
+          <img src="./demo3.jpg" alt="小狗评价示例三" />
+        </div>
+      </div>
+
+      <div
+        id="loadingState"
+        class="hidden w-full max-w-[430px] flex-col items-center justify-center bg-white/70 px-8 py-28 text-center shadow-2xl ring-1 ring-black/5 backdrop-blur-xl"
+      >
+        <div class="h-14 w-14 animate-spin rounded-full border-4 border-neutral-200 border-t-neutral-950"></div>
+        <p class="mt-6 text-sm font-bold text-neutral-700">正在生成小狗玩家评价...</p>
+      </div>
+
+      <div id="previewWrap" class="hidden w-full flex-col items-center justify-center md:items-end">
+        <div
+          id="captureCard"
+          class="w-full max-w-[430px] overflow-hidden bg-white text-black shadow-2xl"
+        >
+          <div class="px-6 pb-5 pt-7">
+            <h2 class="text-[26px] font-black leading-tight">
+              🌍地球online | 小狗服
+            </h2>
+
+            <div
+              id="ratingText"
+              class="mt-4 break-words text-[32px] font-black leading-none tracking-normal"
+              aria-label="评分"
+            >
+              ☆☆☆☆☆
+            </div>
+
+            <p
+              id="reviewText"
+              class="mt-5 whitespace-pre-wrap break-words text-[19px] font-semibold leading-relaxed"
+            ></p>
+          </div>
+
+          <div class="aspect-square w-full overflow-hidden bg-neutral-100">
+            <img
+              id="dogPreview"
+              class="h-full w-full object-cover object-center"
+              alt="上传的小狗照片"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const dogImageInput = document.getElementById('dogImageInput');
+    const uploadLabel = document.getElementById('uploadLabel');
+    const saveButton = document.getElementById('saveButton');
+    const resetButton = document.getElementById('resetButton');
+    const statusText = document.getElementById('statusText');
+    const demoState = document.getElementById('demoState');
+    const loadingState = document.getElementById('loadingState');
+    const previewWrap = document.getElementById('previewWrap');
+    const captureCard = document.getElementById('captureCard');
+    const ratingText = document.getElementById('ratingText');
+    const reviewText = document.getElementById('reviewText');
+    const dogPreview = document.getElementById('dogPreview');
+    const stackCards = Array.from(document.querySelectorAll('[data-stack-card]'));
+
+    const reviewPool = [
+      '人类玩家什么时候能安装狗狗语言包？日常交流全靠猜，好麻烦…人类不想和小狗畅聊么…',
+      '好评！大世界探索很有趣，渲染画质也好，有我很喜欢的黄色小花～',
+      '服务器有时候会卡顿，特别是在洗澡副本的时候，希望能优化一下。',
+      '今日任务奖励很丰富：散步一次、闻草地三十分钟、成功获得零食掉落。',
+      '家园系统不错，沙发和被窝的交互体验都很真实，就是人类管理员偶尔会限制登录。',
+      '五星推荐！地图里有很多未知气味点位，适合长期探索型小狗玩家。'
+    ];
+
+    const stackPositionClasses = ['is-front', 'is-middle', 'is-back'];
+    let currentImageUrl = '';
+    let currentFile = null;
+    let stackOrder = [0, 1, 2];
+    let stackTimer = null;
+    let stackAnimating = false;
+
+    async function fetchDogReview(imageFile) {
+      // TODO: 未来在此处替换为向后端的 FormData POST 请求
+      // const formData = new FormData();
+      // formData.append('image', imageFile);
+      // const response = await fetch('/api/dog-review', {
+      //   method: 'POST',
+      //   body: formData
+      // });
+      // return await response.json();
+
+      return new Promise((resolve) => {
+        window.setTimeout(() => {
+          const rating = Math.floor(Math.random() * 5) + 1;
+          const review = reviewPool[Math.floor(Math.random() * reviewPool.length)];
+
+          resolve({
+            rating,
+            review,
+            fileName: imageFile.name
+          });
+        }, 1000);
+      });
+    }
+
+    function renderStars(rating) {
+      const safeRating = Math.max(1, Math.min(5, Number(rating) || 1));
+      return '★'.repeat(safeRating) + '☆'.repeat(5 - safeRating);
+    }
+
+    function setBusy(isBusy) {
+      dogImageInput.disabled = isBusy;
+      saveButton.disabled = isBusy;
+      resetButton.disabled = isBusy;
+      uploadLabel.classList.toggle('pointer-events-none', isBusy);
+      uploadLabel.classList.toggle('opacity-50', isBusy);
+    }
+
+    function setActionButtonsVisible(isVisible) {
+      saveButton.classList.toggle('hidden', !isVisible);
+      resetButton.classList.toggle('hidden', !isVisible);
+    }
+
+    function showState(state) {
+      demoState.classList.toggle('hidden', state !== 'demo');
+
+      loadingState.classList.toggle('hidden', state !== 'loading');
+      loadingState.classList.toggle('flex', state === 'loading');
+
+      previewWrap.classList.toggle('hidden', state !== 'preview');
+      previewWrap.classList.toggle('flex', state === 'preview');
+    }
+
+    function applyStackClasses() {
+      stackCards.forEach((card) => {
+        card.classList.remove('is-front', 'is-middle', 'is-back', 'is-leaving');
+      });
+
+      stackOrder.forEach((cardIndex, positionIndex) => {
+        stackCards[cardIndex].classList.add(stackPositionClasses[positionIndex]);
+      });
+    }
+
+    function rotateStack() {
+      if (stackAnimating || stackCards.length < 3) {
+        return;
+      }
+
+      stackAnimating = true;
+      const frontCard = stackCards[stackOrder[0]];
+      frontCard.classList.add('is-leaving');
+
+      window.setTimeout(() => {
+        stackOrder.push(stackOrder.shift());
+        applyStackClasses();
+        stackAnimating = false;
+      }, 560);
+    }
+
+    function startStackCarousel() {
+      if (stackTimer) {
+        return;
+      }
+
+      stackTimer = window.setInterval(rotateStack, 3000);
+    }
+
+    function loadImage(url) {
+      return new Promise((resolve, reject) => {
+        dogPreview.onload = resolve;
+        dogPreview.onerror = reject;
+        dogPreview.src = url;
+      });
+    }
+
+    function resetExperience() {
+      currentFile = null;
+      dogImageInput.value = '';
+      dogPreview.removeAttribute('src');
+      ratingText.textContent = '☆☆☆☆☆';
+      ratingText.setAttribute('aria-label', '评分');
+      reviewText.textContent = '';
+      setActionButtonsVisible(false);
+      showState('demo');
+      statusText.textContent = '右侧正在展示生成效果示例。';
+
+      if (currentImageUrl) {
+        URL.revokeObjectURL(currentImageUrl);
+        currentImageUrl = '';
+      }
+    }
+
+    dogImageInput.addEventListener('change', async (event) => {
+      const file = event.target.files && event.target.files[0];
+
+      if (!file) {
+        return;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        currentFile = null;
+        statusText.textContent = '请上传图片文件。';
+        showState('demo');
+        setActionButtonsVisible(false);
+        return;
+      }
+
+      currentFile = file;
+      setBusy(true);
+      showState('loading');
+      setActionButtonsVisible(false);
+      statusText.textContent = '正在生成小狗玩家评价...';
+
+      if (currentImageUrl) {
+        URL.revokeObjectURL(currentImageUrl);
+      }
+
+      currentImageUrl = URL.createObjectURL(file);
+
+      try {
+        const imageReady = loadImage(currentImageUrl);
+        const reviewReady = fetchDogReview(file);
+        const result = await reviewReady;
+
+        await imageReady;
+
+        ratingText.textContent = renderStars(result.rating);
+        ratingText.setAttribute('aria-label', `${result.rating} 星评分`);
+        reviewText.textContent = result.review;
+
+        showState('preview');
+        setActionButtonsVisible(true);
+        statusText.textContent = '评价已生成，可以保存图片。';
+      } catch (error) {
+        console.error(error);
+        currentFile = null;
+        showState('demo');
+        setActionButtonsVisible(false);
+        statusText.textContent = '图片读取失败，请换一张小狗照片再试。';
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    saveButton.addEventListener('click', async () => {
+      if (!currentFile) {
+        statusText.textContent = '请先上传小狗照片。';
+        return;
+      }
+
+      setBusy(true);
+      statusText.textContent = '正在生成图片...';
+
+      try {
+        const canvas = await html2canvas(captureCard, {
+          backgroundColor: '#ffffff',
+          scale: Math.max(2, window.devicePixelRatio || 1),
+          useCORS: true
+        });
+
+        const link = document.createElement('a');
+        link.download = `earth-online-dog-review-${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        statusText.textContent = '图片已生成并开始下载。';
+      } catch (error) {
+        console.error(error);
+        statusText.textContent = '保存失败，请稍后重试。';
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    resetButton.addEventListener('click', resetExperience);
+
+    window.addEventListener('beforeunload', () => {
+      if (currentImageUrl) {
+        URL.revokeObjectURL(currentImageUrl);
+      }
+
+      if (stackTimer) {
+        window.clearInterval(stackTimer);
+      }
+    });
+
+    applyStackClasses();
+    startStackCarousel();
+  </script>
+</body>
+</html>
