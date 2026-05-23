@@ -2,245 +2,661 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>地球 ONLINE (小狗服)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Earth Online Pup</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
-    .stack-card {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
-      background: #ffffff;
-      box-shadow: 0 28px 80px rgba(15, 23, 42, 0.22);
-      transition:
-        opacity 560ms ease,
-        transform 720ms cubic-bezier(0.22, 1, 0.36, 1),
-        filter 720ms ease;
-      will-change: transform, opacity, filter;
+    :root {
+      color-scheme: light;
+      --card-width: 400px;
+      --preview-scale: 1;
     }
 
-    .stack-card img {
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      background:
+        radial-gradient(circle at 18% 4%, rgba(191, 219, 254, 0.88), transparent 28%),
+        radial-gradient(circle at 92% 18%, rgba(221, 214, 254, 0.72), transparent 26%),
+        radial-gradient(circle at 50% 96%, rgba(219, 234, 254, 0.54), transparent 34%),
+        linear-gradient(180deg, #ffffff 0%, #f8fafc 52%, #ffffff 100%);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #050505;
+    }
+
+    .quest-option {
+      background: rgba(248, 250, 252, 0.56);
+      color: #64748b;
+      transition: background 180ms ease, color 180ms ease, font-weight 180ms ease;
+    }
+
+    .quest-option.is-active {
+      background: rgba(99, 102, 241, 0.14);
+      color: #3730a3;
+      font-weight: 900;
+    }
+
+    .rules-ticker {
+      height: 28px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .rules-item {
+      align-items: center;
+      display: flex;
+      height: 28px;
+      justify-content: center;
+      left: 0;
+      opacity: 0;
+      overflow: hidden;
+      position: absolute;
+      right: 0;
+      text-overflow: ellipsis;
+      top: 0;
+      transform: translateY(12px);
+      transition: opacity 420ms ease, transform 420ms ease;
+      white-space: nowrap;
+    }
+
+    .rules-item.is-active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .rules-item.is-exiting {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
+
+    .paw-trigger {
+      align-items: center;
+      background: rgba(255, 255, 255, 0.9);
+      border: 0;
+      border-radius: 999px 0 0 999px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+      display: flex;
+      height: 52px;
+      justify-content: center;
+      position: fixed;
+      right: 0;
+      top: 18px;
+      width: 46px;
+      z-index: 80;
+      backdrop-filter: blur(18px);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .paw-trigger:active {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    .drawer-backdrop {
+      background: rgba(0, 0, 0, 0.4);
+      inset: 0 75vw 0 0;
+      opacity: 0;
+      pointer-events: none;
+      position: fixed;
+      z-index: 110;
+      transition: opacity 240ms ease-in-out;
+    }
+
+    .drawer-backdrop.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .side-drawer {
+      background:
+        radial-gradient(circle at 30% 10%, rgba(219, 234, 254, 0.9), transparent 32%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.96));
+      border-left: 1px solid rgba(148, 163, 184, 0.24);
+      box-shadow: -28px 0 60px rgba(15, 23, 42, 0.2);
+      height: 100dvh;
+      position: fixed;
+      right: 0;
+      top: 0;
+      transform: translateX(100%);
+      transition: transform 260ms ease-in-out;
+      width: 75vw;
+      z-index: 120;
+      backdrop-filter: blur(24px);
+    }
+
+    .side-drawer.is-open {
+      transform: translateX(0);
+    }
+
+    .drawer-menu-item {
+      background: rgba(255, 255, 255, 0.58);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+      color: #111827;
+    }
+
+    .demo-stage {
+      height: clamp(166px, 27vh, 236px);
+      position: relative;
+      width: min(100%, 430px);
+      margin: 0 auto;
+    }
+
+    .fireworks-layer {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      overflow: hidden;
+    }
+
+    .firework-particle {
+      position: absolute;
+      left: 50%;
+      top: 42%;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--particle-color);
+      transform: translate(-50%, -50%);
+      animation: firework-pop 820ms ease-out forwards;
+    }
+
+    @keyframes firework-pop {
+      to {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(0.2);
+      }
+    }
+
+    .demo-card {
+      position: absolute;
+      left: 50%;
+      top: 10px;
+      width: min(45vw, 170px);
+      aspect-ratio: 4 / 5;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 28px 70px rgba(15, 23, 42, 0.2);
+      opacity: 0;
+      transform-origin: 60% 70%;
+      transition:
+        opacity 640ms ease,
+        transform 760ms cubic-bezier(0.22, 1, 0.36, 1),
+        filter 760ms ease;
+      will-change: opacity, transform, filter;
+    }
+
+    .demo-card img {
+      display: block;
       width: 100%;
       height: 100%;
       object-fit: cover;
       object-position: center;
-      display: block;
     }
 
-    .stack-card.is-front {
-      z-index: 30;
+    .demo-card.is-front {
+      z-index: 40;
       opacity: 1;
       filter: saturate(1) contrast(1);
-      transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+      transform: translate3d(-50%, 0, 0) rotate(2deg) scale(1);
     }
 
-    .stack-card.is-middle {
-      z-index: 20;
-      opacity: 0.9;
+    .demo-card.is-second {
+      z-index: 30;
+      opacity: 0.88;
       filter: saturate(0.96) contrast(0.98);
-      transform: translate3d(-22px, 18px, 0) rotate(-3deg) scale(0.96);
+      transform: translate3d(calc(-50% - 46px), 20px, 0) rotate(-6deg) scale(0.94);
     }
 
-    .stack-card.is-back {
-      z-index: 10;
-      opacity: 0.78;
+    .demo-card.is-third {
+      z-index: 20;
+      opacity: 0.72;
       filter: saturate(0.9) contrast(0.96);
-      transform: translate3d(28px, 30px, 0) rotate(6deg) scale(0.92);
+      transform: translate3d(calc(-50% + 42px), 36px, 0) rotate(8deg) scale(0.88);
     }
 
-    .stack-card.is-leaving {
-      z-index: 40;
+    .demo-card.is-fourth {
+      z-index: 10;
+      opacity: 0.5;
+      filter: saturate(0.84) contrast(0.94);
+      transform: translate3d(calc(-50% - 12px), 58px, 0) rotate(13deg) scale(0.8);
+    }
+
+    .demo-card.is-leaving {
+      z-index: 50;
       opacity: 0;
-      filter: saturate(0.85) blur(1px);
-      transform: translate3d(72px, -24px, 0) rotate(8deg) scale(0.94);
+      filter: saturate(0.82) blur(1px);
+      transform: translate3d(calc(-50% + 86px), -26px, 0) rotate(15deg) scale(0.92);
+    }
+
+    .primary-button {
+      background: #050505;
+      color: #fff;
+      box-shadow: 0 18px 44px rgba(15, 23, 42, 0.2), 0 0 44px rgba(96, 165, 250, 0.2);
+      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+
+    .primary-button:hover {
+      background: #111827;
+      box-shadow: 0 22px 54px rgba(15, 23, 42, 0.24), 0 0 54px rgba(59, 130, 246, 0.24);
+      transform: translateY(-2px);
+    }
+
+    .primary-button:active,
+    .secondary-button:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .secondary-button {
+      background: rgba(255, 255, 255, 0.78);
+      color: #111;
+      border: 1px solid rgba(17, 17, 17, 0.1);
+      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.1);
+    }
+
+    #captureCard,
+    .capture-card-frame {
+      width: var(--card-width);
+      overflow: hidden;
+      background: #fff;
+      color: #000;
+      box-shadow: 0 22px 60px rgba(15, 23, 42, 0.12);
+    }
+
+    .capture-card-image {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .export-card-header {
+      overflow: hidden;
+      padding: 24px 24px 22px;
+    }
+
+    .export-card-title {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0;
+      line-height: 1.12;
+      overflow-wrap: anywhere;
+      margin: 0;
+    }
+
+    .export-card-rating {
+      color: #050505;
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      line-height: 1;
+      margin-top: 14px;
+      white-space: nowrap;
+    }
+
+    .export-card-review {
+      color: #050505;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0;
+      line-height: 1.34;
+      margin-top: 16px;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .model-source-tag {
+      display: inline-flex;
+      margin-top: 14px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.06);
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1;
+      padding: 6px 9px;
+    }
+
+    @media (max-width: 420px) {
+      :root {
+        --card-width: 400px;
+      }
+
+      .demo-card {
+        width: min(45vw, 158px);
+      }
     }
   </style>
 </head>
-<body class="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_18%_18%,rgba(219,234,254,0.95),transparent_30%),radial-gradient(circle_at_82%_24%,rgba(221,214,254,0.75),transparent_28%),linear-gradient(135deg,#f8fafc_0%,#eef2ff_48%,#f5f3ff_100%)] text-black">
-  <header class="fixed left-0 top-0 z-50 w-full border-b border-white/40 bg-white/45 backdrop-blur-2xl">
-    <nav class="mx-auto flex h-16 w-full max-w-7xl items-center justify-end px-5 lg:px-8">
-      <div class="flex items-center gap-5 text-sm font-semibold text-neutral-500 sm:gap-7">
-        <div class="group relative">
-          <button
-            type="button"
-            class="transition hover:text-neutral-950"
-            aria-haspopup="true"
-          >
-            服务区切换 ▾
-          </button>
+<body>
+  <button id="drawerTrigger" class="paw-trigger" type="button" aria-label="menu" aria-controls="sideDrawer" aria-expanded="false">
+    <span class="text-[24px]" aria-hidden="true">🐾</span>
+  </button>
 
-          <div class="invisible absolute right-0 top-full z-50 mt-3 w-36 translate-y-2 bg-white py-2 opacity-0 shadow-xl ring-1 ring-black/5 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
-            <a href="#" class="block px-4 py-2.5 text-sm text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-950">喵喵服</a>
-            <a href="#" class="block px-4 py-2.5 text-sm text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-950">水豚服</a>
-            <a href="#" class="block px-4 py-2.5 text-sm text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-950">...</a>
-          </div>
-        </div>
+  <div id="drawerBackdrop" class="drawer-backdrop" aria-hidden="true"></div>
 
-        <a href="#" class="transition hover:text-neutral-950">开发者专区</a>
+  <aside id="sideDrawer" class="side-drawer px-5 py-8" aria-hidden="true">
+    <div class="flex h-full flex-col justify-center">
+      <nav id="drawerMenu" class="grid gap-3" aria-label="menu">
+        <button class="drawer-menu-item rounded-2xl px-4 py-3 text-left text-[16px] font-black" type="button"></button>
+        <button class="drawer-menu-item rounded-2xl px-4 py-3 text-left text-[16px] font-black" type="button"></button>
+        <button class="drawer-menu-item rounded-2xl px-4 py-3 text-left text-[16px] font-black" type="button"></button>
+        <button class="drawer-menu-item rounded-2xl px-4 py-3 text-left text-[16px] font-black" type="button"></button>
+        <button class="drawer-menu-item rounded-2xl px-4 py-3 text-left text-[16px] font-black" type="button"></button>
+      </nav>
+    </div>
+  </aside>
+
+  <main class="mx-auto flex min-h-dvh w-full max-w-[760px] flex-col items-center px-4 pb-8 pt-[36px] sm:px-6">
+    <section class="demo-stage" aria-label="demo carousel">
+      <div class="demo-card is-front" data-demo-card>
+        <img src="./demo1.jpg" alt="" />
       </div>
-    </nav>
-  </header>
-
-  <main class="mx-auto grid min-h-screen w-full max-w-7xl grid-cols-1 items-center gap-12 px-5 pb-10 pt-28 md:grid-cols-[minmax(0,1fr)_minmax(420px,0.92fr)] md:gap-14 lg:px-8">
-    <section class="flex min-h-[420px] flex-col justify-center">
-      <div class="max-w-3xl">
-        <h1 class="text-5xl font-normal leading-[1.02] tracking-normal text-neutral-950 sm:text-6xl lg:text-7xl">
-          🌍 地球 ONLINE
-        </h1>
-
-        <p class="mt-6 max-w-2xl text-lg leading-9 text-gray-500 sm:text-xl">
-          当前已接入<span class="rounded-full bg-indigo-100 px-2.5 py-1 text-neutral-800">小狗服</span>。请小狗玩家上传本阶段的『实机演示截图』，留下你对地球副本的真实评价吧！
-        </p>
-
-        <div class="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
-          <label
-            for="dogImageInput"
-            id="uploadLabel"
-            class="group inline-flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-full bg-neutral-950 px-8 py-4 text-base font-black text-white shadow-[0_18px_45px_rgba(15,23,42,0.22),0_0_32px_rgba(99,102,241,0.12)] transition duration-300 hover:-translate-y-0.5 hover:bg-neutral-800 hover:shadow-[0_22px_60px_rgba(99,102,241,0.34),0_0_46px_rgba(56,189,248,0.18)] focus-within:outline focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-indigo-300"
-          >
-            <span aria-hidden="true">📸</span>
-            <span>上传小狗照片</span>
-          </label>
-          <input id="dogImageInput" class="sr-only" type="file" accept="image/*" />
-
-          <button
-            id="saveButton"
-            type="button"
-            class="hidden min-h-14 rounded-full border border-neutral-950/10 bg-white/75 px-7 py-4 text-base font-black text-neutral-950 shadow-[0_14px_36px_rgba(15,23,42,0.12)] backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_20px_52px_rgba(15,23,42,0.18)] disabled:cursor-not-allowed disabled:border-neutral-300 disabled:text-neutral-400 disabled:shadow-none"
-          >
-            保存图片
-          </button>
-
-          <button
-            id="resetButton"
-            type="button"
-            class="hidden min-h-14 rounded-full border border-white/70 bg-white/45 px-7 py-4 text-base font-black text-neutral-600 shadow-[0_10px_28px_rgba(15,23,42,0.08)] backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:bg-white/80 hover:text-neutral-950 disabled:cursor-not-allowed disabled:text-neutral-400 disabled:shadow-none"
-          >
-            再来一张
-          </button>
-        </div>
-
-        <p id="statusText" class="mt-5 min-h-6 text-sm font-medium text-neutral-500">
-          右侧正在展示生成效果示例。
-        </p>
+      <div class="demo-card is-second" data-demo-card>
+        <img src="./demo2.jpg" alt="" />
+      </div>
+      <div class="demo-card is-third" data-demo-card>
+        <img src="./demo3.jpg" alt="" />
+      </div>
+      <div class="demo-card is-fourth" data-demo-card>
+        <img src="./demo4.jpg" alt="" />
       </div>
     </section>
 
-    <section class="flex min-h-[620px] w-full items-center justify-center md:justify-end">
-      <div
-        id="demoState"
-        class="relative aspect-[4/5] w-full max-w-[430px]"
-        aria-label="生成效果堆叠轮播演示"
-      >
-        <div class="stack-card is-front" data-stack-card>
-          <img src="./demo1.jpg" alt="小狗评价示例一" />
-        </div>
-        <div class="stack-card is-middle" data-stack-card>
-          <img src="./demo2.jpg" alt="小狗评价示例二" />
-        </div>
-        <div class="stack-card is-back" data-stack-card>
-          <img src="./demo3.jpg" alt="小狗评价示例三" />
-        </div>
+    <section class="mt-14 w-full text-left">
+      <div class="flex items-center gap-2">
+        <span id="logoEmoji" class="text-[42px] leading-none" aria-hidden="true"></span>
+        <h1 id="logoTitle" class="bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-blue-700 bg-clip-text text-[46px] font-medium leading-none tracking-normal text-transparent sm:text-5xl">
+        </h1>
       </div>
 
-      <div
-        id="loadingState"
-        class="hidden w-full max-w-[430px] flex-col items-center justify-center bg-white/70 px-8 py-28 text-center shadow-2xl ring-1 ring-black/5 backdrop-blur-xl"
-      >
-        <div class="h-14 w-14 animate-spin rounded-full border-4 border-neutral-200 border-t-neutral-950"></div>
-        <p class="mt-6 text-sm font-bold text-neutral-700">正在生成小狗玩家评价...</p>
+      <p id="subTitle" class="mt-7 max-w-[360px] text-left text-[15px] font-medium leading-7 text-[#4B5563]">
+      </p>
+    </section>
+
+    <section class="w-full max-w-[360px] pb-2 pt-6">
+      <div id="questOptions" class="mt-1 flex items-center gap-1.5 overflow-hidden whitespace-nowrap px-1 text-[12px] font-medium text-[#64748b]" role="radiogroup" aria-label="quests">
+        <span class="shrink-0 rounded-full px-1 py-1" aria-hidden="true">🎮</span>
       </div>
 
-      <div id="previewWrap" class="hidden w-full flex-col items-center justify-center md:items-end">
-        <div
-          id="captureCard"
-          class="w-full max-w-[430px] overflow-hidden bg-white text-black shadow-2xl"
+      <div id="modelOptions" class="mt-3 flex items-center gap-1.5 overflow-hidden whitespace-nowrap px-1 text-[12px] font-medium text-[#64748b]" role="radiogroup" aria-label="models">
+        <span class="shrink-0 rounded-full px-1 py-1" aria-hidden="true">🧠</span>
+      </div>
+
+      <div class="mt-7 grid grid-cols-1 gap-3">
+        <label
+          id="uploadLabel"
+          for="dogImageInput"
+          class="primary-button flex min-h-[56px] w-full cursor-pointer items-center justify-center rounded-full px-6 text-[16px] font-black"
         >
-          <div class="px-6 pb-5 pt-7">
-            <h2 class="text-[26px] font-black leading-tight">
-              🌍地球online | 小狗服
-            </h2>
+        </label>
+        <input id="dogImageInput" class="sr-only" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
 
-            <div
-              id="ratingText"
-              class="mt-4 break-words text-[32px] font-black leading-none tracking-normal"
-              aria-label="评分"
-            >
-              ☆☆☆☆☆
-            </div>
-
-            <p
-              id="reviewText"
-              class="mt-5 whitespace-pre-wrap break-words text-[19px] font-semibold leading-relaxed"
-            ></p>
-          </div>
-
-          <div class="aspect-square w-full overflow-hidden bg-neutral-100">
-            <img
-              id="dogPreview"
-              class="h-full w-full object-cover object-center"
-              alt="上传的小狗照片"
-            />
-          </div>
+        <div id="actionButtons" class="hidden grid grid-cols-2 gap-3">
+          <button
+            id="resetButton"
+            type="button"
+            class="secondary-button min-h-[50px] rounded-[18px] px-4 py-3 text-[15px] font-black transition disabled:cursor-not-allowed disabled:opacity-45"
+          >
+          </button>
+          <button
+            id="saveButton"
+            type="button"
+            class="secondary-button min-h-[50px] rounded-[18px] px-4 py-3 text-[15px] font-black transition disabled:cursor-not-allowed disabled:opacity-45"
+          >
+          </button>
         </div>
+      </div>
+
+      <div id="rulesTrack" class="rules-ticker mx-auto mt-3 w-full text-center text-[12px] font-medium text-slate-400" aria-label="rules">
+      </div>
+
+      <span id="xpText" class="hidden">0 / 100</span>
+      <span id="xpFill" class="hidden"></span>
+      <p id="statusText" class="sr-only" aria-live="polite"></p>
+    </section>
+
+    <section class="mt-5 w-full">
+      <div id="loadingState" class="hidden min-h-[300px] flex-col items-center justify-center rounded-[28px] bg-white/60 px-5 text-center shadow-[0_22px_70px_rgba(15,23,42,0.1)] backdrop-blur-2xl">
+        <div class="h-12 w-12 animate-spin rounded-full border-4 border-neutral-200 border-t-neutral-950"></div>
+        <p id="loadingText" class="mt-5 text-sm font-black text-neutral-700"></p>
       </div>
     </section>
   </main>
 
+  <div id="resultModal" class="fixed inset-0 z-[220] hidden items-center justify-center bg-black/40 px-4 py-6 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="resultModalTitle" aria-hidden="true">
+    <div class="relative flex h-[75dvh] w-full max-w-[460px] flex-col overflow-hidden rounded-[28px] bg-white/90 p-4 shadow-[0_28px_90px_rgba(15,23,42,0.34)] backdrop-blur-2xl">
+      <button id="modalCloseButton" class="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/55 text-[24px] font-medium leading-none text-neutral-700 shadow-[0_8px_22px_rgba(15,23,42,0.12)] backdrop-blur-xl transition active:scale-95" type="button" aria-label="close">×</button>
+      <h2 id="resultModalTitle" class="sr-only"></h2>
+      <div id="modalPreviewSlot" class="flex min-h-0 flex-1 items-start justify-center overflow-auto rounded-[22px] bg-white/60 p-2"></div>
+      <div id="modalActions" class="mt-3 grid grid-cols-2 gap-2"></div>
+    </div>
+  </div>
+
   <script>
+    const fallbackPageConfig = {
+      meta: {
+        document_title: '地球online | 小狗服',
+        logo_text: '🌍 地球ONLINE',
+        sub_title: '当前已接入：小狗服。请小狗玩家上传本阶段的『实机演示截图』，留下你对地球副本的真实评价吧！'
+      },
+      game_rules: [
+        '选择今日闯关副本有暴涨经验哦！',
+        '试试不同测评模型吧，随机测评有惊喜哦~',
+        '打卡之后可以去大世界认识好朋狗！'
+      ],
+      buttons: {
+        btn_upload: '📸 上传小狗实机演示图',
+        btn_save: '保存图片',
+        btn_retry: '再来一张',
+        btn_create_profile: '创建档案'
+      },
+      quests: [
+        '神秘草地狂奔',
+        '奇袭人类拖鞋',
+        '捕获不明飞行物'
+      ],
+      models: [
+        '随机抽象',
+        'Qwen',
+        'Gemini'
+      ],
+      drawer: [
+        '🐾 我的小狗名片',
+        '🌍 大世界刨坑',
+        '🦴 去找好朋狗',
+        '❓ 常见问题',
+        '🧑‍🔧 大世界bugs'
+      ],
+      card: {
+        title: '地球online | 小狗服',
+        empty_photo: '小狗照片预览区',
+        default_review: '上传小狗照片后，将在这里生成地球副本评价。',
+        default_rating: '☆☆☆☆☆',
+        rating_label: '评分',
+        rating_suffix: '星评分',
+        fallback_model: '随机抽象'
+      },
+      status: {
+        initial: '请先上传一张小狗照片。',
+        unsupported_file: '请上传 JPG 或 PNG 图片。',
+        generating: '小狗正在锐评大世界...',
+        image_read_failed: '图片读取失败，请换一张 JPG 或 PNG 图片。',
+        image_retry_failed: '图片读取失败，请换一张 JPG 或 PNG 图片再试。',
+        generated: '评价已生成，可以保存图片。',
+        saving: '正在生成图片...',
+        saved: '图片已生成并开始下载。',
+        save_failed: '保存失败：',
+        retry_later: '请稍后重试。',
+        html2canvas_missing: 'html2canvas 未加载完成',
+        backend_failed: '后端锐评失败，请确认 FastAPI 服务已启动。',
+        review_failed: '小狗锐评失败，请稍后重试。'
+      },
+      modal: {
+        title: '生成结果',
+        close_label: '关闭弹窗'
+      }
+    };
+    let pageConfig = fallbackPageConfig;
+
+    async function loadPageConfig() {
+      try {
+        const response = await fetch('./page_config.json', {
+          cache: 'no-store'
+        });
+
+        if (!response.ok) {
+          throw new Error(`page_config.json ${response.status}`);
+        }
+
+        pageConfig = await response.json();
+      } catch (error) {
+        console.warn('Using fallback page config.', error);
+        pageConfig = fallbackPageConfig;
+      }
+    }
+
+    function readConfig(path, fallback = '') {
+      try {
+        const value = path.split('.').reduce((source, key) => source && source[key], pageConfig);
+        return value === undefined || value === null ? fallback : value;
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function readConfigArray(path, fallback = []) {
+      const value = readConfig(path, fallback);
+      return Array.isArray(value) ? value : fallback;
+    }
+
+    function splitLogoText(text) {
+      const [firstSymbol = '', ...rest] = Array.from(text || '');
+      return {
+        emoji: firstSymbol,
+        title: rest.join('').trim()
+      };
+    }
+
+    function createOptionButton(label, dataName, isActive = false) {
+      const button = document.createElement('button');
+      button.className = `quest-option${isActive ? ' is-active' : ''} rounded-full px-2 py-1`;
+      button.type = 'button';
+      button.dataset[dataName] = label;
+      button.setAttribute('aria-pressed', String(isActive));
+      button.textContent = label;
+      return button;
+    }
+
+    function applyPageConfig() {
+      const logo = splitLogoText(readConfig('meta.logo_text', 'Earth ONLINE'));
+      const logoEmoji = document.getElementById('logoEmoji');
+      const logoTitle = document.getElementById('logoTitle');
+      const subTitle = document.getElementById('subTitle');
+      const questOptionsRoot = document.getElementById('questOptions');
+      const modelOptionsRoot = document.getElementById('modelOptions');
+      const drawerMenu = document.getElementById('drawerMenu');
+      const titleText = readConfig('meta.document_title', 'Earth Online Pup');
+
+      document.title = titleText;
+      logoEmoji.textContent = logo.emoji;
+      logoTitle.textContent = logo.title;
+      subTitle.textContent = readConfig('meta.sub_title', '');
+      uploadLabel.textContent = readConfig('buttons.btn_upload', 'Upload');
+      resetButton.textContent = readConfig('buttons.btn_retry', 'Retry');
+      saveButton.textContent = readConfig('buttons.btn_save', 'Save');
+      loadingText.textContent = readConfig('status.generating', 'Loading...');
+      resultModalTitle.textContent = readConfig('modal.title', '');
+      modalCloseButton.setAttribute('aria-label', readConfig('modal.close_label', 'close'));
+
+      Array.from(drawerMenu.children).forEach((button, index) => {
+        button.textContent = readConfigArray('drawer', [])[index] || '';
+      });
+
+      Array.from(questOptionsRoot.querySelectorAll('[data-quest-option]')).forEach((button) => button.remove());
+      readConfigArray('quests', []).forEach((label, index) => {
+        questOptionsRoot.appendChild(createOptionButton(label, 'questOption', index === 0));
+      });
+
+      Array.from(modelOptionsRoot.querySelectorAll('[data-model-option]')).forEach((button) => button.remove());
+      readConfigArray('models', []).forEach((label, index) => {
+        modelOptionsRoot.appendChild(createOptionButton(label, 'modelOption', index === 0));
+      });
+    }
+
     const dogImageInput = document.getElementById('dogImageInput');
     const uploadLabel = document.getElementById('uploadLabel');
+    const actionButtons = document.getElementById('actionButtons');
     const saveButton = document.getElementById('saveButton');
     const resetButton = document.getElementById('resetButton');
     const statusText = document.getElementById('statusText');
-    const demoState = document.getElementById('demoState');
     const loadingState = document.getElementById('loadingState');
-    const previewWrap = document.getElementById('previewWrap');
-    const captureCard = document.getElementById('captureCard');
-    const ratingText = document.getElementById('ratingText');
-    const reviewText = document.getElementById('reviewText');
-    const dogPreview = document.getElementById('dogPreview');
-    const stackCards = Array.from(document.querySelectorAll('[data-stack-card]'));
+    const loadingText = document.getElementById('loadingText');
+    const demoCards = Array.from(document.querySelectorAll('[data-demo-card]'));
+    const xpText = document.getElementById('xpText');
+    const xpFill = document.getElementById('xpFill');
+    const rulesTrack = document.getElementById('rulesTrack');
+    const drawerTrigger = document.getElementById('drawerTrigger');
+    const drawerBackdrop = document.getElementById('drawerBackdrop');
+    const sideDrawer = document.getElementById('sideDrawer');
+    const resultModal = document.getElementById('resultModal');
+    const modalCloseButton = document.getElementById('modalCloseButton');
+    const resultModalTitle = document.getElementById('resultModalTitle');
+    const modalPreviewSlot = document.getElementById('modalPreviewSlot');
+    const modalActions = document.getElementById('modalActions');
 
-    const reviewPool = [
-      '人类玩家什么时候能安装狗狗语言包？日常交流全靠猜，好麻烦…人类不想和小狗畅聊么…',
-      '好评！大世界探索很有趣，渲染画质也好，有我很喜欢的黄色小花～',
-      '服务器有时候会卡顿，特别是在洗澡副本的时候，希望能优化一下。',
-      '今日任务奖励很丰富：散步一次、闻草地三十分钟、成功获得零食掉落。',
-      '家园系统不错，沙发和被窝的交互体验都很真实，就是人类管理员偶尔会限制登录。',
-      '五星推荐！地图里有很多未知气味点位，适合长期探索型小狗玩家。'
-    ];
+    let questOptions = [];
+    let modelOptions = [];
+    let captureCard = null;
+    let modalImageView = null;
 
-    const stackPositionClasses = ['is-front', 'is-middle', 'is-back'];
-    let currentImageUrl = '';
     let currentFile = null;
-    let stackOrder = [0, 1, 2];
-    let stackTimer = null;
-    let stackAnimating = false;
+    let questProgress = {
+      xp: 0
+    };
+    let demoOrder = [0, 1, 2, 3];
+    let demoTimer = null;
+    let demoAnimating = false;
+    let activeRuleIndex = 0;
+    let ruleTimer = null;
+    const demoPositionClasses = ['is-front', 'is-second', 'is-third', 'is-fourth'];
+    const demoLeavingClass = 'is-leaving';
+    const demoStateClasses = [...demoPositionClasses, demoLeavingClass];
+    let currentImageUrl = '';
 
     async function fetchDogReview(imageFile) {
-      // TODO: 未来在此处替换为向后端的 FormData POST 请求
-      // const formData = new FormData();
-      // formData.append('image', imageFile);
-      // const response = await fetch('/api/dog-review', {
-      //   method: 'POST',
-      //   body: formData
-      // });
-      // return await response.json();
+      const formData = new FormData();
+      formData.append('file', imageFile);
+      formData.append('model_type', getActiveModelType());
 
-      return new Promise((resolve) => {
-        window.setTimeout(() => {
-          const rating = Math.floor(Math.random() * 5) + 1;
-          const review = reviewPool[Math.floor(Math.random() * reviewPool.length)];
-
-          resolve({
-            rating,
-            review,
-            fileName: imageFile.name
-          });
-        }, 1000);
+      const response = await fetch('http://127.0.0.1:8000/api/upload-dog-pic', {
+        method: 'POST',
+        body: formData
       });
+
+      if (!response.ok) {
+        throw new Error(readConfig('status.backend_failed', 'Request failed.'));
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(readConfig('status.review_failed', 'Review failed.'));
+      }
+
+      return result;
     }
 
     function renderStars(rating) {
@@ -248,86 +664,357 @@
       return '★'.repeat(safeRating) + '☆'.repeat(5 - safeRating);
     }
 
+    function debounce(fn, delay = 150) {
+      let timer = null;
+
+      return (...args) => {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          fn(...args);
+        }, delay);
+      };
+    }
+
+    function updatePreviewScale() {
+      document.documentElement.style.setProperty('--preview-scale', '1');
+    }
+
     function setBusy(isBusy) {
       dogImageInput.disabled = isBusy;
       saveButton.disabled = isBusy;
       resetButton.disabled = isBusy;
+      modalActions.querySelectorAll('button').forEach((button) => {
+        button.disabled = isBusy;
+      });
       uploadLabel.classList.toggle('pointer-events-none', isBusy);
-      uploadLabel.classList.toggle('opacity-50', isBusy);
+      uploadLabel.classList.toggle('opacity-55', isBusy);
     }
 
-    function setActionButtonsVisible(isVisible) {
-      saveButton.classList.toggle('hidden', !isVisible);
-      resetButton.classList.toggle('hidden', !isVisible);
+    function showLoading(isLoading) {
+      loadingState.classList.toggle('hidden', !isLoading);
+      loadingState.classList.toggle('flex', isLoading);
     }
 
-    function showState(state) {
-      demoState.classList.toggle('hidden', state !== 'demo');
-
-      loadingState.classList.toggle('hidden', state !== 'loading');
-      loadingState.classList.toggle('flex', state === 'loading');
-
-      previewWrap.classList.toggle('hidden', state !== 'preview');
-      previewWrap.classList.toggle('flex', state === 'preview');
+    function setGeneratedState(isGenerated) {
+      uploadLabel.classList.toggle('hidden', isGenerated);
+      actionButtons.classList.add('hidden');
     }
 
-    function applyStackClasses() {
-      stackCards.forEach((card) => {
-        card.classList.remove('is-front', 'is-middle', 'is-back', 'is-leaving');
+    function setStatus(message) {
+      if (statusText) {
+        statusText.textContent = message;
+      }
+    }
+
+    function loadQuestProgress() {
+      try {
+        const savedProgress = JSON.parse(window.localStorage.getItem('earthOnlinePupQuestProgress') || '{}');
+        questProgress = {
+          xp: Number(savedProgress.xp) || 0
+        };
+      } catch (error) {
+        questProgress = {
+          xp: 0
+        };
+      }
+    }
+
+    function saveQuestProgress() {
+      window.localStorage.setItem('earthOnlinePupQuestProgress', JSON.stringify(questProgress));
+    }
+
+    function renderQuestProgress() {
+      xpText.textContent = `${questProgress.xp} / 100`;
+      xpFill.style.width = `${Math.min(100, questProgress.xp)}%`;
+    }
+
+    function setActiveQuest(targetOption) {
+      questOptions.forEach((option) => {
+        const isActive = option === targetOption;
+        option.classList.toggle('is-active', isActive);
+        option.setAttribute('aria-pressed', String(isActive));
       });
+    }
 
-      stackOrder.forEach((cardIndex, positionIndex) => {
-        stackCards[cardIndex].classList.add(stackPositionClasses[positionIndex]);
+    function setActiveModel(targetOption) {
+      modelOptions.forEach((option) => {
+        const isActive = option === targetOption;
+        option.classList.toggle('is-active', isActive);
+        option.setAttribute('aria-pressed', String(isActive));
       });
     }
 
-    function rotateStack() {
-      if (stackAnimating || stackCards.length < 3) {
+    function getActiveModelType() {
+      const activeOption = modelOptions.find((option) => option.classList.contains('is-active'));
+      return activeOption ? activeOption.dataset.modelOption : readConfig('card.fallback_model', 'Random');
+    }
+
+    function renderGameRules() {
+      const rules = readConfigArray('game_rules', []);
+
+      rulesTrack.innerHTML = '';
+      rules.forEach((rule, index) => {
+        const ruleItem = document.createElement('span');
+        ruleItem.className = `rules-item${index === 0 ? ' is-active' : ''}`;
+        ruleItem.textContent = rule;
+        rulesTrack.appendChild(ruleItem);
+      });
+    }
+
+    function rotateGameRules() {
+      const ruleItems = Array.from(rulesTrack.querySelectorAll('.rules-item'));
+
+      if (ruleItems.length <= 1) {
         return;
       }
 
-      stackAnimating = true;
-      const frontCard = stackCards[stackOrder[0]];
-      frontCard.classList.add('is-leaving');
+      const currentItem = ruleItems[activeRuleIndex];
+      activeRuleIndex = (activeRuleIndex + 1) % ruleItems.length;
+      const nextItem = ruleItems[activeRuleIndex];
+
+      currentItem.classList.remove('is-active');
+      currentItem.classList.add('is-exiting');
+      nextItem.classList.add('is-active');
 
       window.setTimeout(() => {
-        stackOrder.push(stackOrder.shift());
-        applyStackClasses();
-        stackAnimating = false;
-      }, 560);
+        currentItem.classList.remove('is-exiting');
+      }, 420);
     }
 
-    function startStackCarousel() {
-      if (stackTimer) {
+    function startGameRulesSlider() {
+      if (ruleTimer) {
         return;
       }
 
-      stackTimer = window.setInterval(rotateStack, 3000);
+      ruleTimer = window.setInterval(rotateGameRules, 2600);
     }
 
-    function loadImage(url) {
-      return new Promise((resolve, reject) => {
-        dogPreview.onload = resolve;
-        dogPreview.onerror = reject;
-        dogPreview.src = url;
+    function openDrawer() {
+      sideDrawer.classList.add('is-open');
+      drawerBackdrop.classList.add('is-open');
+      sideDrawer.setAttribute('aria-hidden', 'false');
+      drawerTrigger.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeDrawer() {
+      sideDrawer.classList.remove('is-open');
+      drawerBackdrop.classList.remove('is-open');
+      sideDrawer.setAttribute('aria-hidden', 'true');
+      drawerTrigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function hasDogProfile() {
+      return window.localStorage.getItem('has_dog_profile') === 'true';
+    }
+
+    function renderGeneratedCard(result) {
+      modalPreviewSlot.innerHTML = '';
+      const logo = splitLogoText(readConfig('meta.logo_text', 'Earth ONLINE'));
+      const card = document.createElement('div');
+      const header = document.createElement('div');
+      const title = document.createElement('h2');
+      const titleEmoji = document.createElement('span');
+      const titleText = document.createElement('span');
+      const rating = document.createElement('div');
+      const review = document.createElement('p');
+      const modelTag = document.createElement('span');
+      const image = document.createElement('img');
+
+      card.id = 'captureCard';
+      card.className = 'capture-card-frame';
+      card.style.width = 'min(100%, 400px)';
+      card.style.maxWidth = '400px';
+      card.style.boxShadow = 'none';
+
+      header.className = 'export-card-header';
+      title.className = 'export-card-title';
+      titleEmoji.setAttribute('aria-hidden', 'true');
+      titleEmoji.textContent = logo.emoji;
+      titleText.textContent = readConfig('card.title', readConfig('meta.document_title', 'Earth Online Pup'));
+      title.append(titleEmoji, titleText);
+
+      rating.className = 'export-card-rating';
+      rating.setAttribute('aria-label', `${result.rating} ${readConfig('card.rating_suffix', 'stars')}`);
+      rating.textContent = renderStars(result.rating);
+
+      review.className = 'export-card-review';
+      review.textContent = result.review;
+
+      modelTag.className = 'model-source-tag';
+      modelTag.textContent = result.model_type || readConfig('card.fallback_model', 'Random');
+
+      header.append(title, rating, review, modelTag);
+
+      image.id = 'modal-image-view';
+      image.className = 'capture-card-image';
+      image.alt = readConfig('card.empty_photo', '');
+      image.src = currentImageUrl;
+
+      card.append(header, image);
+      modalPreviewSlot.appendChild(card);
+      captureCard = card;
+      modalImageView = image;
+    }
+
+    function MapsToProfile() {
+      console.log('MapsToProfile placeholder: open dog profile page later.');
+    }
+
+    function renderModalActions() {
+      const actions = [
+        {
+          label: readConfig('buttons.btn_save', 'Save'),
+          className: 'primary-button min-h-[48px] rounded-[16px] px-3 py-3 text-[14px] font-black',
+          onClick: saveGeneratedImage
+        },
+        {
+          label: readConfig('buttons.btn_retry', 'Retry'),
+          className: 'secondary-button min-h-[48px] rounded-[16px] px-3 py-3 text-[14px] font-black',
+          onClick: () => {
+            closeResultModal();
+          }
+        }
+      ];
+
+      if (!hasDogProfile()) {
+        actions.push({
+          label: readConfig('buttons.btn_create_profile', 'Create'),
+          className: 'secondary-button min-h-[48px] rounded-[16px] px-3 py-3 text-[14px] font-black',
+          onClick: MapsToProfile
+        });
+      }
+
+      modalActions.className = `mt-3 grid ${actions.length === 3 ? 'grid-cols-3' : 'grid-cols-2'} gap-2`;
+      modalActions.innerHTML = '';
+      actions.forEach((action) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `${action.className} transition disabled:cursor-not-allowed disabled:opacity-45`;
+        button.textContent = action.label;
+        button.addEventListener('click', action.onClick);
+        modalActions.appendChild(button);
       });
     }
 
-    function resetExperience() {
+    function openResultModal(result) {
+      renderGeneratedCard(result);
+      renderModalActions();
+      resultModal.classList.remove('hidden');
+      resultModal.classList.add('flex');
+      resultModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function hideResultModal() {
+      const modalImg = document.getElementById('modal-image-view');
+      if (modalImg) {
+        modalImg.src = '';
+      }
+      modalPreviewSlot.innerHTML = '';
+      captureCard = null;
+      modalImageView = null;
+      resultModal.classList.add('hidden');
+      resultModal.classList.remove('flex');
+      resultModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function closeResultModal() {
+      resetExperience({
+        skipModalClose: true
+      });
+      hideResultModal();
+    }
+
+    function triggerFireworks() {
+      const layer = document.createElement('div');
+      const colors = ['#38bdf8', '#6366f1', '#22c55e', '#f59e0b', '#ec4899'];
+
+      layer.className = 'fireworks-layer';
+      document.body.appendChild(layer);
+
+      for (let index = 0; index < 28; index += 1) {
+        const particle = document.createElement('span');
+        const angle = (Math.PI * 2 * index) / 28;
+        const distance = 80 + Math.random() * 90;
+
+        particle.className = 'firework-particle';
+        particle.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+        particle.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+        particle.style.setProperty('--particle-color', colors[index % colors.length]);
+        layer.appendChild(particle);
+      }
+
+      window.setTimeout(() => {
+        layer.remove();
+      }, 900);
+    }
+
+    function awardDogXp(amount) {
+      questProgress.xp += amount;
+
+      if (questProgress.xp >= 100) {
+        questProgress.xp %= 100;
+        triggerFireworks();
+      }
+
+      saveQuestProgress();
+      renderQuestProgress();
+    }
+
+    function applyDemoClasses() {
+      demoCards.forEach((card) => {
+        card.classList.remove(...demoStateClasses);
+      });
+
+      demoOrder.forEach((cardIndex, positionIndex) => {
+        demoCards[cardIndex].classList.add(demoPositionClasses[positionIndex]);
+      });
+    }
+
+    function rotateDemoCards() {
+      if (demoAnimating || demoCards.length < demoPositionClasses.length) {
+        return;
+      }
+
+      demoAnimating = true;
+      const frontCard = demoCards[demoOrder[0]];
+      frontCard.classList.add(demoLeavingClass);
+
+      window.setTimeout(() => {
+        demoOrder.push(demoOrder.shift());
+        applyDemoClasses();
+        demoAnimating = false;
+      }, 640);
+    }
+
+    function startDemoCarousel() {
+      if (demoTimer) {
+        return;
+      }
+
+      demoTimer = window.setInterval(rotateDemoCards, 3000);
+    }
+
+    function isSupportedImageFile(file) {
+      const allowedImageTypes = ['image/jpeg', 'image/png'];
+      const hasSupportedType = allowedImageTypes.includes(file.type);
+      const hasSupportedName = /\.(jpe?g|png)$/i.test(file.name);
+
+      return hasSupportedType || hasSupportedName;
+    }
+
+    function resetExperience(options = {}) {
       currentFile = null;
       dogImageInput.value = '';
-      dogPreview.removeAttribute('src');
-      ratingText.textContent = '☆☆☆☆☆';
-      ratingText.setAttribute('aria-label', '评分');
-      reviewText.textContent = '';
-      setActionButtonsVisible(false);
-      showState('demo');
-      statusText.textContent = '右侧正在展示生成效果示例。';
-
       if (currentImageUrl) {
         URL.revokeObjectURL(currentImageUrl);
         currentImageUrl = '';
       }
+      if (!options.skipModalClose) {
+        hideResultModal();
+      }
+      setGeneratedState(false);
+      showLoading(false);
+      setStatus(readConfig('status.initial', 'Upload an image first.'));
     }
 
     dogImageInput.addEventListener('change', async (event) => {
@@ -337,95 +1024,207 @@
         return;
       }
 
-      if (!file.type.startsWith('image/')) {
-        currentFile = null;
-        statusText.textContent = '请上传图片文件。';
-        showState('demo');
-        setActionButtonsVisible(false);
+      if (!isSupportedImageFile(file)) {
+        dogImageInput.value = '';
+        setStatus(readConfig('status.unsupported_file', 'Unsupported image file.'));
         return;
       }
 
       currentFile = file;
       setBusy(true);
-      showState('loading');
-      setActionButtonsVisible(false);
-      statusText.textContent = '正在生成小狗玩家评价...';
+      setGeneratedState(false);
+      showLoading(true);
+      hideResultModal();
+      setStatus(readConfig('status.generating', 'Generating...'));
 
       if (currentImageUrl) {
         URL.revokeObjectURL(currentImageUrl);
       }
 
-      currentImageUrl = URL.createObjectURL(file);
-
       try {
-        const imageReady = loadImage(currentImageUrl);
+        currentImageUrl = URL.createObjectURL(file);
+        const imageReady = new Promise((resolve, reject) => {
+          const probeImage = new Image();
+          probeImage.onload = () => resolve();
+          probeImage.onerror = () => reject(new Error(readConfig('status.image_read_failed', 'Image read failed.')));
+          probeImage.src = currentImageUrl;
+        });
         const reviewReady = fetchDogReview(file);
+
         const result = await reviewReady;
 
         await imageReady;
 
-        ratingText.textContent = renderStars(result.rating);
-        ratingText.setAttribute('aria-label', `${result.rating} 星评分`);
-        reviewText.textContent = result.review;
-
-        showState('preview');
-        setActionButtonsVisible(true);
-        statusText.textContent = '评价已生成，可以保存图片。';
+        showLoading(false);
+        setGeneratedState(true);
+        awardDogXp(result.exp_gained || 35);
+        setStatus(readConfig('status.generated', 'Generated.'));
+        window.requestAnimationFrame(() => openResultModal(result));
       } catch (error) {
         console.error(error);
         currentFile = null;
-        showState('demo');
-        setActionButtonsVisible(false);
-        statusText.textContent = '图片读取失败，请换一张小狗照片再试。';
+        if (currentImageUrl) {
+          URL.revokeObjectURL(currentImageUrl);
+          currentImageUrl = '';
+        }
+        showLoading(false);
+        setGeneratedState(false);
+        dogImageInput.value = '';
+        setStatus(error.message || readConfig('status.image_retry_failed', 'Image read failed.'));
       } finally {
         setBusy(false);
       }
     });
 
-    saveButton.addEventListener('click', async () => {
+    async function saveGeneratedImage() {
       if (!currentFile) {
-        statusText.textContent = '请先上传小狗照片。';
+        setStatus(readConfig('status.initial', 'Upload an image first.'));
+        return;
+      }
+
+      if (!captureCard) {
+        setStatus(readConfig('status.image_retry_failed', 'Image read failed.'));
         return;
       }
 
       setBusy(true);
-      statusText.textContent = '正在生成图片...';
+      setStatus(readConfig('status.saving', 'Saving...'));
 
       try {
-        const canvas = await html2canvas(captureCard, {
-          backgroundColor: '#ffffff',
-          scale: Math.max(2, window.devicePixelRatio || 1),
-          useCORS: true
+        if (typeof html2canvas === 'undefined') {
+          throw new Error(readConfig('status.html2canvas_missing', 'html2canvas is not ready'));
+        }
+
+        const previousWillChange = captureCard.style.willChange;
+        const previousBoxShadow = captureCard.style.boxShadow;
+        const wasDemoRunning = Boolean(demoTimer);
+        let canvas;
+
+        try {
+          if (demoTimer) {
+            window.clearInterval(demoTimer);
+            demoTimer = null;
+          }
+
+          captureCard.style.boxShadow = 'none';
+          captureCard.style.willChange = 'transform';
+          canvas = await html2canvas(captureCard, {
+            backgroundColor: '#ffffff',
+            imageTimeout: 0,
+            logging: false,
+            removeContainer: true,
+            scale: 1,
+            useCORS: true
+          });
+        } finally {
+          captureCard.style.boxShadow = previousBoxShadow;
+          captureCard.style.willChange = previousWillChange;
+
+          if (wasDemoRunning) {
+            startDemoCarousel();
+          }
+        }
+
+        const blob = await new Promise((resolve) => {
+          if (!canvas.toBlob) {
+            resolve(null);
+            return;
+          }
+
+          canvas.toBlob(resolve, 'image/png');
         });
-
+        const downloadUrl = blob ? URL.createObjectURL(blob) : canvas.toDataURL('image/png');
         const link = document.createElement('a');
-        link.download = `earth-online-dog-review-${Date.now()}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
 
-        statusText.textContent = '图片已生成并开始下载。';
+        link.download = `earth-online-dog-review-${Date.now()}.png`;
+        link.href = downloadUrl;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        if (blob) {
+          window.setTimeout(() => {
+            URL.revokeObjectURL(downloadUrl);
+          }, 1000);
+        }
+
+        setStatus(readConfig('status.saved', 'Saved.'));
       } catch (error) {
         console.error(error);
-        statusText.textContent = '保存失败，请稍后重试。';
+        setStatus(`${readConfig('status.save_failed', 'Save failed: ')}${error.message || readConfig('status.retry_later', 'Try again later.')}`);
       } finally {
         setBusy(false);
       }
-    });
+    }
 
-    resetButton.addEventListener('click', resetExperience);
+    const handleWindowResize = debounce(updatePreviewScale, 150);
+    const handleWindowKeydown = (event) => {
+      if (event.key === 'Escape') {
+        if (!resultModal.classList.contains('hidden')) {
+          closeResultModal();
+          return;
+        }
 
-    window.addEventListener('beforeunload', () => {
-      if (currentImageUrl) {
-        URL.revokeObjectURL(currentImageUrl);
+        closeDrawer();
+      }
+    };
+    const handleBeforeUnload = () => {
+      if (demoTimer) {
+        window.clearInterval(demoTimer);
       }
 
-      if (stackTimer) {
-        window.clearInterval(stackTimer);
+      if (ruleTimer) {
+        window.clearInterval(ruleTimer);
       }
-    });
 
-    applyStackClasses();
-    startStackCarousel();
+      window.removeEventListener('resize', handleWindowResize);
+      window.removeEventListener('keydown', handleWindowKeydown);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+
+    async function initializePage() {
+      await loadPageConfig();
+      applyPageConfig();
+
+      questOptions = Array.from(document.querySelectorAll('[data-quest-option]'));
+      modelOptions = Array.from(document.querySelectorAll('[data-model-option]'));
+
+      saveButton.addEventListener('click', saveGeneratedImage);
+      resetButton.addEventListener('click', () => resetExperience());
+      drawerTrigger.addEventListener('click', openDrawer);
+      drawerBackdrop.addEventListener('click', closeDrawer);
+      modalCloseButton.addEventListener('click', closeResultModal);
+      resultModal.addEventListener('click', (event) => {
+        if (event.target === resultModal) {
+          closeResultModal();
+        }
+      });
+      questOptions.forEach((option) => {
+        option.addEventListener('click', () => {
+          setActiveQuest(option);
+        });
+      });
+      modelOptions.forEach((option) => {
+        option.addEventListener('click', () => {
+          setActiveModel(option);
+        });
+      });
+      window.addEventListener('keydown', handleWindowKeydown);
+      window.addEventListener('resize', handleWindowResize);
+      window.addEventListener('load', updatePreviewScale);
+      window.addEventListener('beforeunload', handleBeforeUnload);
+
+      setStatus(readConfig('status.initial', 'Upload an image first.'));
+      renderGameRules();
+      startGameRulesSlider();
+      loadQuestProgress();
+      renderQuestProgress();
+      applyDemoClasses();
+      startDemoCarousel();
+      updatePreviewScale();
+    }
+
+    initializePage();
   </script>
 </body>
 </html>

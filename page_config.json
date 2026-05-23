@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "document_title": "地球online | 小狗服",
+    "logo_text": "🌍 地球ONLINE",
+    "sub_title": "当前已接入：小狗服。请小狗玩家上传本阶段的『实机演示截图』，留下你对地球副本的真实评价吧！"
+  },
+  "game_rules": [
+    "选择今日闯关副本有暴涨经验哦！",
+    "试试不同测评模型吧，随机测评有惊喜哦~",
+    "打卡之后可以去大世界认识好朋狗！"
+  ],
+  "buttons": {
+    "btn_upload": "📸 上传小狗实机演示图",
+    "btn_save": "保存图片",
+    "btn_retry": "再来一张",
+    "btn_create_profile": "创建档案"
+  },
+  "quests": [
+    "神秘草地狂奔",
+    "奇袭人类拖鞋",
+    "捕获不明飞行物"
+  ],
+  "models": [
+    "随机抽象",
+    "Qwen",
+    "Gemini"
+  ],
+  "drawer": [
+    "🐾 我的小狗名片",
+    "🌍 大世界刨坑",
+    "🦴 去找好朋狗",
+    "❓ 常见问题",
+    "🧑‍🔧 大世界bugs"
+  ],
+  "card": {
+    "title": "地球online | 小狗服",
+    "empty_photo": "小狗照片预览区",
+    "default_review": "上传小狗照片后，将在这里生成地球副本评价。",
+    "default_rating": "☆☆☆☆☆",
+    "rating_label": "评分",
+    "rating_suffix": "星评分",
+    "fallback_model": "随机抽象"
+  },
+  "status": {
+    "initial": "请先上传一张小狗照片。",
+    "unsupported_file": "请上传 JPG 或 PNG 图片。",
+    "generating": "小狗正在锐评大世界...",
+    "image_read_failed": "图片读取失败，请换一张 JPG 或 PNG 图片。",
+    "image_retry_failed": "图片读取失败，请换一张 JPG 或 PNG 图片再试。",
+    "generated": "评价已生成，可以保存图片。",
+    "saving": "正在生成图片...",
+    "saved": "图片已生成并开始下载。",
+    "save_failed": "保存失败：",
+    "retry_later": "请稍后重试。",
+    "html2canvas_missing": "html2canvas 未加载完成",
+    "backend_failed": "后端锐评失败，请确认 FastAPI 服务已启动。",
+    "review_failed": "小狗锐评失败，请稍后重试。"
+  },
+  "modal": {
+    "title": "生成结果",
+    "close_label": "关闭弹窗"
+  }
+}
